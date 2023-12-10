@@ -1,6 +1,6 @@
 <script setup lang="ts">
-const contractAddress = ref('')
-const data = ref({
+const contractAddress = $ref('0xf93Ea4bF57ddC2818C6e5FA4739862189b17C382')
+const data = $ref({
   img: 'https://i.seadn.io/gae/CUhtaQy31ekplPzumVPNAmdjcMIDm6IB7ARw_Q4JOpu-dIXAvNPxTfItD4rJuFZI8x7BK8Z0-Ly2cmr182zXbpoN1uybC8h2l89csg?auto=format&dpr=1&w=384',
   title: 'Crypto Toys Club',
   id: '1016',

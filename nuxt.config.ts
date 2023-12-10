@@ -18,6 +18,9 @@ export default defineNuxtConfig({
     inlineSSRStyles: false,
     renderJsonPayloads: true,
     typedPages: true,
+
+    viewTransition: true,
+    reactivityTransform: true,
   },
 
   css: [
