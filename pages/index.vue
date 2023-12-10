@@ -1,10 +1,71 @@
 <script setup lang="ts">
-const contractAddress = $ref('0xf93Ea4bF57ddC2818C6e5FA4739862189b17C382')
-const data = $ref({
-  img: 'https://i.seadn.io/gae/CUhtaQy31ekplPzumVPNAmdjcMIDm6IB7ARw_Q4JOpu-dIXAvNPxTfItD4rJuFZI8x7BK8Z0-Ly2cmr182zXbpoN1uybC8h2l89csg?auto=format&dpr=1&w=384',
-  title: 'Crypto Toys Club',
-  id: '1016',
+import { polygonMumbai } from 'viem/chains'
+import { createPublicClient, createWalletClient, custom, decodeAbiParameters, formatEther, http, keccak256, parseAbiItem, publicActions, toHex } from 'viem'
+import MockNFT from '@/contracts/abis/MockNFT.json'
+
+const contractAddress = $ref('0x70C8552868a7a10c62470456E1f1a48189307b74')
+const tokenId = $ref('3042')
+let data = $ref({
+
 })
+let name = $ref('')
+
+async function getClient(chain) {
+  const [account] = await window.ethereum.request({ method: 'eth_requestAccounts' })
+  const walletClient = createWalletClient({
+    account,
+    chain,
+    transport: custom(window.ethereum),
+  }).extend(publicActions)
+
+  try {
+    await walletClient.switchChain({ id: chain.id })
+  }
+  catch (e) {
+    if (e.code === 4902) {
+      await walletClient.addChain({ chain })
+      await walletClient.switchChain({ id: chain.id })
+    }
+  }
+
+  return walletClient
+}
+
+let client = $ref('')
+onMounted(async () => {
+  client = await getClient(polygonMumbai)
+})
+
+let isLoading = $ref(false)
+async function getNFTData() {
+  if (!contractAddress || !tokenId || isLoading)
+    return
+
+  isLoading = true
+
+  const params = {
+    address: contractAddress,
+    abi: MockNFT,
+    functionName: 'tokenURI',
+    args: [tokenId],
+  }
+
+  name = await client.readContract({
+    ...params,
+    functionName: 'name',
+    args: [],
+  })
+  const url = await client.readContract(params)
+  data = await $fetch(url)
+  if (data.image.startsWith('ipfs://'))
+    data.image = data.image.replace('ipfs://', 'https://ipfs.io/ipfs/')
+
+  isLoading = false
+}
+
+async function doBridge () {
+  console.log(`====> doBridge`)
+}
 </script>
 
 <template>
@@ -12,21 +73,33 @@ const data = $ref({
     <h2 mb-10 text-3xl>
       NFT Bridge
     </h2>
-    <UInput v-model="contractAddress" color="primary" variant="outline" placeholder="Search..." />
-    <div v-if="data.img">
+    <div space-y-5>
+      <UFormGroup label="contractAddress" name="contractAddress">
+        <UInput v-model="contractAddress" />
+      </UFormGroup>
+
+      <UFormGroup label="tokenId" name="tokenId">
+        <UInput v-model="tokenId" />
+      </UFormGroup>
+
+      <UButton :loading="isLoading" color="white" variant="solid" @click="getNFTData">
+        Query NFT Data
+      </UButton>
+    </div>
+    <div v-if="data.image">
       <div mx-auto my-10 max-w-md>
-        <img :src="data.img" mb-5>
+        <img :src="data.image" mb-5>
         <div flex justify="between">
           <div>
-            {{ data.title }}
+            {{ name }}
           </div>
           <div>
-            # {{ data.id }}
+            # {{ tokenId }}
           </div>
         </div>
       </div>
-      <UButton color="primary" variant="solid">
-        Bridge to Fuji Chain
+      <UButton :loading="isLoading" @click="doBridge">
+        Bridge NFT to Fuji
       </UButton>
     </div>
   </div>

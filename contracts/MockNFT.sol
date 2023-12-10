@@ -11,10 +11,6 @@ contract MockNFT is ERC721, ERC721URIStorage, Ownable {
         Ownable(initialOwner)
     {}
 
-    function _baseURI() internal pure override returns (string memory) {
-        return "ipfs://bafybeifkbaxlcwp4pyfrqcx7blvebzwvenb5ef63o7jbfl4qj5cuna5wtm/";
-    }
-
     function safeMint(address to, uint256 tokenId, string memory uri)
         public
         onlyOwner
@@ -24,7 +20,6 @@ contract MockNFT is ERC721, ERC721URIStorage, Ownable {
     }
 
     // The following functions are overrides required by Solidity.
-
     function tokenURI(uint256 tokenId)
         public
         view
