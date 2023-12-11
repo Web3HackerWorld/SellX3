@@ -2,6 +2,7 @@
 import { polygonMumbai } from 'viem/chains'
 import { createPublicClient, createWalletClient, custom, decodeAbiParameters, formatEther, http, keccak256, parseAbiItem, publicActions, toHex } from 'viem'
 import MockNFT from '@/contracts/abis/MockNFT.json'
+import NFTBridge from '@/contracts/abis/NFTBridge.json'
 
 const contractAddress = $ref('0x70C8552868a7a10c62470456E1f1a48189307b74')
 const tokenId = $ref('3042')
@@ -63,15 +64,45 @@ async function getNFTData() {
   isLoading = false
 }
 
-async function doBridge () {
-  console.log(`====> doBridge`)
+const contractNFTBridgeAddress = '0xEC452eC33325BB55Ab60a2DE65eA87006146E8ba'
+async function doBridge() {
+  if (isLoading)
+    return
+  isLoading = true
+
+  let params = {
+    address: contractAddress,
+    abi: MockNFT,
+    functionName: 'approve',
+    args: [
+      contractNFTBridgeAddress,
+      tokenId,
+    ],
+  }
+  let hash = await client.writeContract(params)
+  await client.waitForTransactionReceipt({ hash })
+
+  params = {
+    address: contractNFTBridgeAddress,
+    abi: NFTBridge,
+    functionName: 'bridgeNFT',
+    args: [
+      14767482510784806043, // fuji chain selector
+      '0x99c736B08e12C59afE4F355cbAC0A93814B4F1cA', // receiver on fuji
+      contractAddress,
+      tokenId,
+    ],
+  }
+  hash = await client.writeContract(params)
+  await client.waitForTransactionReceipt({ hash })
+  isLoading = false
 }
 </script>
 
 <template>
   <div mx-auto max-w-2xl>
     <h2 mb-10 text-3xl>
-      NFT Bridge
+      Super NFT Bridge
     </h2>
     <div space-y-5>
       <UFormGroup label="contractAddress" name="contractAddress">
